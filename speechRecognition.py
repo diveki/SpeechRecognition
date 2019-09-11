@@ -10,6 +10,7 @@ import random
 import time
 
 import speech_recognition as sr
+from home_helpers import *
 
 
 def recognize_speech_from_mic(recognizer, microphone):
