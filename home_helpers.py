@@ -1,5 +1,6 @@
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import numpy as np
+import time
 
 speech_topic = {
     'light': ['switch the blue light on', 'turn the green light off', 'make dark', 'give me light', 'lights up', 'leds down', 'switch the red led off', 'turn the yellow diode on', 'turn the led up', 'make the white lights blink', 'blink the leds', 'turn the bulb up', 'switch the bulb off'],
@@ -111,7 +112,11 @@ class SpeechMap:
 
     def light_operation(self):
         words = self.text.split(' ')
-        self.chosen_operation = list(set(words) & set(['on', 'off', 'blink', 'blinking', 'up', 'down', 'dark']))[0]
+        tmp = set(words) & set(['on', 'off', 'blink', 'blinking', 'up', 'down', 'dark'])
+        if tmp == set():
+            self.chosen_operation = []
+        else:
+            self.chosen_operation = list(tmp)[0]
         
     def light_action(self):
         if self.chosen_color == []:
@@ -123,9 +128,9 @@ class SpeechMap:
             leds = self.lights
         else:
             leds = [led for led in self.lights if led.color in self.chosen_color]
+            if leds == []:
+                print('Please choose a color that exists')
         # select operation
-        # import pdb
-        # pdb.set_trace()
         if self.chosen_operation == []:
             print('Say if you want the lights on, off or blinking!')
         if self.chosen_operation in ['on', 'up']:
@@ -155,11 +160,9 @@ if __name__ == '__main__':
     led3 = LightControl(3, 'green')
     leds = [led1, led2, led3]
 
-    sp=SpeechMap('turn all the leds on please', leds)
+    sp=SpeechMap('switch on the big red and blue lights', leds)
     topic = sp.find_topic()
-    sp.find_color()
-    sp.light_operation()
-    sp.light_action()
+    sp.allocate_task(topic)
 
 
 
