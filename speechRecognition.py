@@ -106,11 +106,21 @@ leds = {'red': switchLed,
         }
 quit_state = False
 
-while not quit_state:
+quit_class = QuitClass()
+
+while True:
     input('Press enter and tell me instructions: ')
     a = recognize_speech_from_mic(rec, mic)
-    quit_state = light_switch_on_speech(a['transcription'], leds)
+    text = a['transcription']
+    ##################################
+    # Check if the command was to quit
+    quit_state = quit_class.verify(text)
+    # quit_state = light_switch_on_speech(a['transcription'], leds)
     if quit_state:
         break
+    ##################################
+    # Determine the context topic
+    sp = SpeechMap(text)
+    topic = sp.find_topic()
     
 

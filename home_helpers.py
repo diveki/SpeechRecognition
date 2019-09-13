@@ -1,8 +1,14 @@
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+import numpy as np
 
-speech_topic = [('switch the light on', 'light'), ('turn the light off','light'), ('make dark', 'light'), ('give me light','light'), ('lights up','light'), ('leds down','light'), ('switch the red led off','light'), ('turn the diode on','light'), ('let there be light','light'), ('make the lights blink','light'), ('blink the leds','light'), ('turn the bulb up','light'), ('switch the bulb off','light'),
-    ('play music','music'), ('play a something','music'), ('start the next song','music'), ('play my favorite song','music'), ('stop playing music','music'), ('play a song','music'), ('play the next music','music'), ('play the next song','music'), ('what is the title of this song','music'), ('who is the singer of this song','music'), ('stop the music','music'), ('what band is this','music'), ('which singer is this','music'),
-    ('what is the weather today','weather'), ('is it wet outside','weather'), ('how is the weather','weather'), ('weather please','weather'), ('is it cold outside','weather'), ('what it feels like outside','weather'), ('what is the temperature','weather'), ('is it warm outside','weather'), ('what is the temperature outside','weather'), ('is it raining','weather'), ('is it windy outside','weather'), ('is it snowing','weather'), ('give me a weather forecast','weather')]
+speech_topic = {
+    'light': ['switch the blue light on', 'turn the green light off', 'make dark', 'give me light', 'lights up', 'leds down', 'switch the red led off', 'turn the yellow diode on', 'let there be light', 'make the white lights blink', 'blink the leds', 'turn the bulb up', 'switch the bulb off'],
+    'music': ['play music', 'play a something', 'start the next song', 'play my favorite song', 'stop playing music', 'play a song', 'play the next music', 'play the next song', 'what is the title of this song', 'who is the singer of this song', 'stop the music', 'what band is this', 'which singer is this'],
+    'weather': ['what is the weather today', 'is it wet outside', 'how is the weather', 'weather please', 'is it cold outside', 'what it feels like outside', 'what is the temperature', 'is it warm outside', 'what is the temperature outside', 'is it raining', 'is it windy outside', 'is it snowing', 'give me a weather forecast']
+}
 
+topics_name = [topic for topic in speech_topic.keys() for i in speech_topic[topic]]
+topics_features = [i for topic in speech_topic.keys() for i in speech_topic[topic]]
 
 def test_any_membership(text, test):
     tmp = any(i in text for i in test)
@@ -56,8 +62,33 @@ class LightControl:
 
 # Class for mapping speech to action
 class SpeechMap:
-    def __init__(self, text):
-        self.text = text.lower().split()
+    def __init__(self, text, features = topics_features, target = topics_name, vectorizer = TfidfVectorizer()):
+        self.text = text.lower()
+        self._topic = target
+        self._topic_features = topics_features
+        self._topic_vectorizer = vectorizer
+        self._topic_set = np.unique(target)
+        self._topic_indecies = np.array_split(range(len(target)), len(self._topic_set))        
 
     def find_color(self):
         pass
+    
+    def find_topic(self):
+        self._topic_vocabulary = self._topic_vectorizer.fit_transform(self._topic_features)
+        text_transform = self._topic_vectorizer.transform([self.text])
+        # import pdb
+        # pdb.set_trace()
+        self.topic_corr = np.array([np.corrcoef(text_transform.toarray()[0],i)[0,1] for i in self._topic_vocabulary.toarray()])
+        topic_sum = np.array([np.sum(self.topic_corr[i]) for i in self._topic_indecies])
+        max_sum = np.amax(topic_sum)
+        arg_sum = np.where(topic_sum == max_sum)
+        if max_sum < 1.2:
+            print('Unkown topic! Please request something about the following topics: {}'.format(self._topic_set))
+            return 'unkown'
+        else:
+            return self._topic_set[arg_sum][0]
+
+
+
+
+
