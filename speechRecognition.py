@@ -122,5 +122,9 @@ while True:
     # Determine the context topic
     sp = SpeechMap(text)
     topic = sp.find_topic()
+    if topic == 'unknown':
+        continue
+    else:
+        
     
 
