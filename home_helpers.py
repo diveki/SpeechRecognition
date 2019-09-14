@@ -1,7 +1,7 @@
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import numpy as np
 import time
-from subprocess import call
+from subprocess import call, getoutput
 
 
 speech_topic = {
@@ -13,6 +13,7 @@ speech_topic = {
 colour_defs = ['all', 'some', 'red', 'blue', 'green', 'yellow', 'white', 'black', 'orange', 'purple', 'pink', 'cyan', 'brown']
 city_names = ['szeged', 'budapest', 'debrecen', 'pecs', 'london', 'paris', 'new york', 'madrid', 'belgrade', 'wien', 'stockholm', 'coppenhagen', 'berlin']
 dates = ['today', 'now', 'tomorrow', 'currently']
+music_words = ['play', 'next', 'previous', 'stop', 'title', 'name', 'artist', 'singer', 'presenter']
 
 topics_name = [topic for topic in speech_topic.keys() for i in speech_topic[topic]]
 topics_features = [i for topic in speech_topic.keys() for i in speech_topic[topic]]
@@ -49,13 +50,40 @@ class MusicPlayer:
         call(['mocp','-p', self.path])
 
     def next_song(self):
-        pass
+        call(['mocp','--next'])
+
+    def previous_song(self):
+        call(['mocp','--previous'])
 
     def stop(self):
-        pass
+        call(['mocp','-s'])
+
+    def _get_info(self):
+        out = getoutput('mocp -i')
+        out = out.splitlines()
+        cont = [line.split(':') for line in out]
+        self.song_details = {item[0]:item[1] for item in cont}
 
     def title(self):
-        pass
+        self._get_info()
+        if self.song_details['State'] == 'STOP':
+            print('There is no music at the moment. Say play music!')
+        else:
+            if (self.song_details['Title'] == ' ') and (self.song_details['SongTitle'] == ' '):
+                print('The song title was not recorded in the file!')
+            else:
+                print('The file title is {}'.format(self.song_details['Title']))
+                print('The song title is {}'.format(self.song_details['SongTitle']))
+
+    def artist(self):
+        self._get_info()
+        if self.song_details['State'] == 'STOP':
+            print('There is no music at the moment. Say play music!')
+        else:
+            if self.song_details['Artist'] == ' ':
+                print('The artist name was not recorded in the file!')
+            else:
+                print('The artist name is {}'.format(self.song_details['Artist']))
 
 
 # Class for controlling the lights
@@ -78,7 +106,7 @@ class LightControl:
 # Class for mapping speech to action
 class SpeechMap:
 
-    def __init__(self, text, lights, features = topics_features, target = topics_name, vectorizer = TfidfVectorizer()):
+    def __init__(self, text, lights, music, features = topics_features, target = topics_name, vectorizer = TfidfVectorizer()):
         self.text = text.lower()
         self._topic = target
         self._topic_features = topics_features
@@ -87,10 +115,11 @@ class SpeechMap:
         self._topic_indecies = np.array_split(range(len(target)), len(self._topic_set))
         self.submaps = {
             'light': [self.find_color, self.light_operation, self.light_action],
-            'music': [self.music_action],
+            'music': [self.music_operation, self.music_action],
             'weather': [self.find_city, self.find_date, self.weather_action]
         }
         self.lights = lights
+        self.music_player = music
 
 
     def find_color(self, color = colour_defs):
@@ -147,10 +176,34 @@ class SpeechMap:
         if self.chosen_operation in ['off', 'down', 'dark']:
             for led in leds:
                 led.switch_off()
+        self.chosen_operation = []
 
-    def music_action(self):
-        pass
+    def music_action(self, key_words=music_words):
+        words = self.text.split(' ')
+        music_words = ['play', 'next', 'previous', 'stop', 'title', 'name', 'artist', 'singer', 'presenter']
+        if self.chosen_operation == []:
+            print('Say if you want to play, stop, music or want the next, previous song!')
+        if self.chosen_operation in ['play']:
+            self.music_player.play()
+        if self.chosen_operation in ['next']:
+            self.music_player.next_song()
+        if self.chosen_operation in ['previous']:
+            self.music_player.previous_song()
+        if self.chosen_operation in ['stop']:
+            self.music_player.stop()
+        if self.chosen_operation in ['title']:
+            self.music_player.title()
+        if self.chosen_operation in ['name', 'artist', 'singer', 'presenter', 'band']:
+            self.music_player.artist()
+        self.chosen_operation = []
 
+    def music_operation(self, key_words=music_words):
+        words = self.text.split(' ')
+        tmp = set(words) & set(key_words)
+        if tmp == set():
+            self.chosen_operation = []
+        else:
+            self.chosen_operation = list(tmp)[0]
 
     def find_city(self, cities = city_names):
         words = self.text.split(' ')
@@ -177,11 +230,14 @@ class SpeechMap:
         call(['curl', url])
 
 if __name__ == '__main__':
+    music_path = '~/Programok/Python/Projects/SpeechRecognition/Music'
+    music_player = MusicPlayer(music_path)
+
     led1 = LightControl(1, 'red')
     led2 = LightControl(2, 'blue')
     led3 = LightControl(3, 'green')
     leds = [led1, led2, led3]
 
-    sp=SpeechMap('What does the weather look like tomorrow in Szeged', leds)
+    sp=SpeechMap('Play music for me please', leds, music_player)
     topic = sp.find_topic()
     sp.allocate_task(topic)
