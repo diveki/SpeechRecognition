@@ -41,11 +41,12 @@ class QuitClass:
 
 # Class for controlling music
 class MusicPlayer:
-    def __init__(self):
-        pass
+    def __init__(self, path):
+        self.path = path
+        call(['mocp', '-S'])
 
     def play(self):
-        pass
+        call(['mocp','-p', self.path])
 
     def next_song(self):
         pass
