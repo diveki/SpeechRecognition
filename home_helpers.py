@@ -1,6 +1,8 @@
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import numpy as np
 import time
+from subprocess import call
+
 
 speech_topic = {
     'light': ['switch the blue light on', 'turn the green light off', 'make dark', 'give me light', 'lights up', 'leds down', 'switch the red led off', 'turn the yellow diode on', 'turn the led up', 'make the white lights blink', 'blink the leds', 'turn the bulb up', 'switch the bulb off'],
@@ -9,6 +11,8 @@ speech_topic = {
 }
 
 colour_defs = ['all', 'some', 'red', 'blue', 'green', 'yellow', 'white', 'black', 'orange', 'purple', 'pink', 'cyan', 'brown']
+city_names = ['szeged', 'budapest', 'debrecen', 'pecs', 'london', 'paris', 'new york', 'madrid', 'belgrade', 'wien', 'stockholm', 'coppenhagen', 'berlin']
+dates = ['today', 'now', 'tomorrow', 'currently']
 
 topics_name = [topic for topic in speech_topic.keys() for i in speech_topic[topic]]
 topics_features = [i for topic in speech_topic.keys() for i in speech_topic[topic]]
@@ -72,18 +76,18 @@ class LightControl:
 
 # Class for mapping speech to action
 class SpeechMap:
-    
+
     def __init__(self, text, lights, features = topics_features, target = topics_name, vectorizer = TfidfVectorizer()):
         self.text = text.lower()
         self._topic = target
         self._topic_features = topics_features
         self._topic_vectorizer = vectorizer
         self._topic_set = np.unique(target)
-        self._topic_indecies = np.array_split(range(len(target)), len(self._topic_set))        
+        self._topic_indecies = np.array_split(range(len(target)), len(self._topic_set))
         self.submaps = {
             'light': [self.find_color, self.light_operation, self.light_action],
-            'music': [self.music],
-            'weather': [self.find_city, self.weather]
+            'music': [self.music_action],
+            'weather': [self.find_city, self.find_date, self.weather_action]
         }
         self.lights = lights
 
@@ -91,7 +95,7 @@ class SpeechMap:
     def find_color(self, color = colour_defs):
         words = self.text.split(' ')
         self.chosen_color = list(set(words) & set(color))
-        
+
     def find_topic(self):
         self._topic_vocabulary = self._topic_vectorizer.fit_transform(self._topic_features)
         text_transform = self._topic_vectorizer.transform([self.text])
@@ -117,7 +121,7 @@ class SpeechMap:
             self.chosen_operation = []
         else:
             self.chosen_operation = list(tmp)[0]
-        
+
     def light_action(self):
         if self.chosen_color == []:
             print('Please choose a color!')
@@ -143,16 +147,33 @@ class SpeechMap:
             for led in leds:
                 led.switch_off()
 
-    def music(self):
+    def music_action(self):
         pass
 
 
-    def find_city(self):
-        pass
+    def find_city(self, cities = city_names):
+        words = self.text.split(' ')
+        self.chosen_city = list(set(words) & set(cities))
+        # import pdb; pdb.set_trace()
+        if self.chosen_city == []:
+            print('No city found so we set Szeged as the target city!')
+            self.chosen_city = ['Szeged']
 
-    def weather(self):
-        pass
 
+    def find_date(self, date_options = dates):
+        words = self.text.split(' ')
+        self.chosen_date = list(set(words) & set(date_options))
+        if self.chosen_date == []:
+            self.chosen_date = ['now']
+
+    def weather_action(self):
+        if self.chosen_date[0] in ['now', 'currently']:
+            url = 'wttr.in/' + self.chosen_city[0] + '?0'
+        elif self.chosen_date[0] in ['tomorrow']:
+            url = 'wttr.in/' + self.chosen_city[0] + '?2'
+        elif self.chosen_date[0] in ['today']:
+            url = 'wttr.in/' + self.chosen_city[0] + '?1'
+        call(['curl', url])
 
 if __name__ == '__main__':
     led1 = LightControl(1, 'red')
@@ -160,9 +181,6 @@ if __name__ == '__main__':
     led3 = LightControl(3, 'green')
     leds = [led1, led2, led3]
 
-    sp=SpeechMap('switch on the big red and blue lights', leds)
+    sp=SpeechMap('What does the weather look like tomorrow in Szeged', leds)
     topic = sp.find_topic()
     sp.allocate_task(topic)
-
-
-
