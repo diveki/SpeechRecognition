@@ -44,7 +44,7 @@ class QuitClass:
 class MusicPlayer:
     def __init__(self, path):
         self.path = path
-        call(['mocp', '-S'])
+        # call(['mocp', '-S'])
 
     def play(self):
         call(['mocp','-p', self.path])
@@ -116,7 +116,8 @@ class SpeechMap:
         self.submaps = {
             'light': [self.find_color, self.light_operation, self.light_action],
             'music': [self.music_operation, self.music_action],
-            'weather': [self.find_city, self.find_date, self.weather_action]
+            'weather': [self.find_city, self.find_date, self.weather_action],
+            'unknown': [self.unkown_action]
         }
         self.lights = lights
         self.music_player = music
@@ -134,8 +135,8 @@ class SpeechMap:
         max_sum = np.amax(topic_sum)
         arg_sum = np.where(topic_sum == max_sum)
         if max_sum < 1.2:
-            print('Unkown topic! Please request something about the following topics: {}'.format(self._topic_set))
-            return 'unkown'
+            print('Unknown topic! Please request something about the following topics: {}'.format(self._topic_set))
+            return 'unknown'
         else:
             return self._topic_set[arg_sum][0]
 
@@ -177,6 +178,9 @@ class SpeechMap:
             for led in leds:
                 led.switch_off()
         self.chosen_operation = []
+
+    def unkown_action(self):
+        print('Please say your instructions again on a different topic!')
 
     def music_action(self, key_words=music_words):
         words = self.text.split(' ')
@@ -230,7 +234,7 @@ class SpeechMap:
         call(['curl', url])
 
 if __name__ == '__main__':
-    music_path = '~/Programok/Python/Projects/SpeechRecognition/Music'
+    music_path = './Music'
     music_player = MusicPlayer(music_path)
 
     led1 = LightControl(1, 'red')
@@ -238,6 +242,6 @@ if __name__ == '__main__':
     led3 = LightControl(3, 'green')
     leds = [led1, led2, led3]
 
-    sp=SpeechMap('Play music for me please', leds, music_player)
+    sp=SpeechMap('My name is zsolt', leds, music_player)
     topic = sp.find_topic()
     sp.allocate_task(topic)
