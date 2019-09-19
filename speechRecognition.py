@@ -30,8 +30,12 @@ quit_class = QuitClass()
 
 while True:
     input('Press enter and tell me instructions: ')
-    text_object = recognize_speech_from_mic(rec, mic)
-    text = text_object['transcription']
+    try:
+        text_object = recognize_speech_from_mic(rec, mic)
+        text = text_object['transcription']
+    except:
+        text = input('I am waiting for your request. Please type it in: \n')
+
     ##################################
     # Check if the command was to quit
     quit_state = quit_class.verify(text)
