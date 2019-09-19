@@ -23,7 +23,10 @@ leds = [led1, led2, led3]
 
 
 rec = sr.Recognizer()
-mic = sr.Microphone()
+try:
+    mic = sr.Microphone()
+except:
+    pass
 
 quit_state = False
 quit_class = QuitClass()
@@ -35,7 +38,6 @@ while True:
         text = text_object['transcription']
     except:
         text = input('I am waiting for your request. Please type it in: \n')
-
     ##################################
     # Check if the command was to quit
     quit_state = quit_class.verify(text)
