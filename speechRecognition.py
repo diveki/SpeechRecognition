@@ -9,16 +9,15 @@ Created on Sun May 27 09:43:25 2018
 import random
 import time
 
-import speech_recognition as sr
 from home_helpers import *
 
 
 music_path = './Music'
 music_player = MusicPlayer(music_path)
 
-led1 = LightControl(1, 'red')
-led2 = LightControl(2, 'blue')
-led3 = LightControl(3, 'green')
+led1 = LightControl(16, 'red')
+led2 = LightControl(21, 'blue')
+led3 = LightControl(12, 'green')
 leds = [led1, led2, led3]
 
 
@@ -38,6 +37,7 @@ while True:
         text = text_object['transcription']
     except:
         text = input('I am waiting for your request. Please type it in: \n')
+    print('I heard this: {}'.format(text))
     ##################################
     # Check if the command was to quit
     quit_state = quit_class.verify(text)

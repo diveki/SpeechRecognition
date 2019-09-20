@@ -2,6 +2,9 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import numpy as np
 import time
 from subprocess import call, getoutput
+import speech_recognition as sr
+import moc
+import gpiozero as gp0
 
 
 speech_topic = {
@@ -91,10 +94,10 @@ class QuitClass:
 class MusicPlayer:
     def __init__(self, path):
         self.path = path
-        # call(['mocp', '-S'])
+        call(['mocp', '-S'])
 
     def play(self):
-        call(['mocp','-p', self.path])
+        moc.find_and_play(self.path + '/*')
 
     def next_song(self):
         call(['mocp','--next'])
@@ -135,17 +138,21 @@ class MusicPlayer:
 
 # Class for controlling the lights
 class LightControl:
-    def __init__(self, id, color):
-        self.id = id
+    def __init__(self, pid, color):
+        self.pid = pid
         self.color = color
+        self.led = gp0.LED(pid)
 
     def switch_on(self):
+        self.led.on()
         print('{} colored led is on'.format(self.color))
-
+	
     def switch_off(self):
+        self.led.off()
         print('{} colored led is off'.format(self.color))
 
     def blink(self):
+        self.led.blink()
         print('{} colored led is blinking'.format(self.color))
 
 
@@ -259,7 +266,6 @@ class SpeechMap:
     def find_city(self, cities = city_names):
         words = self.text.split(' ')
         self.chosen_city = list(set(words) & set(cities))
-        # import pdb; pdb.set_trace()
         if self.chosen_city == []:
             print('No city found so we set Szeged as the target city!')
             self.chosen_city = ['Szeged']
