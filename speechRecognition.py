@@ -15,8 +15,8 @@ from home_helpers import *
 music_path = './Music'
 music_player = MusicPlayer(music_path)
 
-led1 = LightControl(16, 'red')
-led2 = LightControl(21, 'blue')
+led1 = LightControl(16, 'yellow')
+led2 = LightControl(21, 'red')
 led3 = LightControl(12, 'green')
 leds = [led1, led2, led3]
 
