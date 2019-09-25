@@ -2,9 +2,9 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import numpy as np
 import time
 from subprocess import call, getoutput
-import speech_recognition as sr
 import moc
 import gpiozero as gp0
+import speech_recognition as sr
 
 
 speech_topic = {

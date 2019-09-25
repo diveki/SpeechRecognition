@@ -39,7 +39,7 @@ while True:
         text = input('I am waiting for your request. Please type it in: \n')
     print('I heard this: {}'.format(text))
     if not text:
-        continue
+        text = input('I am waiting for your request. Please type it in: \n')
     ##################################
     # Check if the command was to quit
     quit_state = quit_class.verify(text)
