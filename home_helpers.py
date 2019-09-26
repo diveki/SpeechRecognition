@@ -100,10 +100,12 @@ class MusicPlayer:
         moc.find_and_play(self.path + '/*')
 
     def next_song(self):
-        call(['mocp','--next'])
+        moc.next()
+        #call(['mocp','--next'])
 
     def previous_song(self):
-        call(['mocp','--previous'])
+        #call(['mocp','--previous'])
+        moc.previous()
 
     def stop(self):
         call(['mocp','-s'])
